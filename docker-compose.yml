@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # Laravel API Backend
+  laravel-api:
+    build:
+      context: ./bin-lookup-system
+      dockerfile: Dockerfile
+    container_name: bin-lookup-api
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=mysql
+      - DB_DATABASE=bin_lookup_system
+      - DB_USERNAME=bin_user
+      - DB_PASSWORD=secure_password
+      - REDIS_HOST=redis
+      - QUEUE_CONNECTION=redis
+      - CACHE_DRIVER=redis
+    volumes:
+      - ./bin-lookup-system:/var/www
+      - laravel_storage:/var/www/storage
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - bin-lookup
+
+  # Vue.js Frontend
+  vue-frontend:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+    container_name: bin-lookup-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./fe:/app
+      - node_modules:/app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    networks:
+      - bin-lookup
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: bin-lookup-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: bin_lookup_system
+      MYSQL_USER: bin_user
+      MYSQL_PASSWORD: secure_password
+    command: >
+      bash -c "
+        echo 'CREATE DATABASE IF NOT EXISTS bin_lookup_system_test;' > /docker-entrypoint-initdb.d/01-create-test-db.sql &&
+        echo 'GRANT ALL PRIVILEGES ON bin_lookup_system_test.* TO \"bin_user\"@\"%\";' >> /docker-entrypoint-initdb.d/01-create-test-db.sql &&
+        echo 'FLUSH PRIVILEGES;' >> /docker-entrypoint-initdb.d/01-create-test-db.sql &&
+        docker-entrypoint.sh mysqld
+      "
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
+    networks:
+      - bin-lookup
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: bin-lookup-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass redis_password
+    volumes:
+      - redis_data:/data
+    networks:
+      - bin-lookup
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: bin-lookup-phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root_password
+    depends_on:
+      - mysql
+    networks:
+      - bin-lookup
+
+  # Queue Worker
+  queue-worker:
+    build:
+      context: ./bin-lookup-system
+      dockerfile: Dockerfile
+    container_name: bin-lookup-queue
+    command: sh -c "sleep 15 && php artisan queue:work redis --queue=bin-lookups --sleep=3 --tries=3 --daemon"
+    environment:
+      - APP_ENV=local
+      - DB_HOST=mysql
+      - DB_DATABASE=bin_lookup_system
+      - DB_USERNAME=bin_user
+      - DB_PASSWORD=secure_password
+      - REDIS_HOST=redis
+      - REDIS_PASSWORD=redis_password
+      - QUEUE_CONNECTION=redis
+    volumes:
+      - ./bin-lookup-system:/var/www
+    depends_on:
+      - mysql
+      - redis
+      - laravel-api
+    networks:
+      - bin-lookup
+
+volumes:
+  mysql_data:
+  redis_data:
+  laravel_storage:
+  node_modules:
+
+networks:
+  bin-lookup:
+    driver: bridge
