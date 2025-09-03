@@ -14,7 +14,7 @@
             <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
               <button
                 @click="handleExport"
-                :disabled="loading || !hasData"
+                :disabled="binDataStore.loading || !binDataStore.hasData"
                 class="inline-flex items-center justify-center rounded-md border border-transparent bg-green-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
                 <div class="ml-5 w-0 flex-1">
                   <dl>
                     <dt class="text-sm font-medium text-blue-600 truncate">Total BINs</dt>
-                    <dd class="text-lg font-medium text-blue-900">{{ stats.total_bins.toLocaleString() }}</dd>
+                    <dd class="text-lg font-medium text-blue-900">{{ binDataStore.stats.total_bins.toLocaleString() }}</dd>
                   </dl>
                 </div>
               </div>
@@ -57,7 +57,7 @@
                 <div class="ml-5 w-0 flex-1">
                   <dl>
                     <dt class="text-sm font-medium text-green-600 truncate">Unique Banks</dt>
-                    <dd class="text-lg font-medium text-green-900">{{ stats.unique_banks.toLocaleString() }}</dd>
+                    <dd class="text-lg font-medium text-green-900">{{ binDataStore.stats.unique_banks.toLocaleString() }}</dd>
                   </dl>
                 </div>
               </div>
@@ -75,7 +75,7 @@
                 <div class="ml-5 w-0 flex-1">
                   <dl>
                     <dt class="text-sm font-medium text-purple-600 truncate">Countries</dt>
-                    <dd class="text-lg font-medium text-purple-900">{{ stats.unique_countries.toLocaleString() }}</dd>
+                    <dd class="text-lg font-medium text-purple-900">{{ binDataStore.stats.unique_countries.toLocaleString() }}</dd>
                   </dl>
                 </div>
               </div>
@@ -119,7 +119,7 @@
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
                 <option value="">All Brands</option>
-                <option v-for="brand in filterOptions.brands" :key="brand" :value="brand">
+                <option v-for="brand in binDataStore.filterOptions.brands" :key="brand" :value="brand">
                   {{ brand }}
                 </option>
               </select>
@@ -133,7 +133,7 @@
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
                 <option value="">All Types</option>
-                <option v-for="type in filterOptions.types" :key="type" :value="type">
+                <option v-for="type in binDataStore.filterOptions.types" :key="type" :value="type">
                   {{ type }}
                 </option>
               </select>
@@ -147,7 +147,7 @@
                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               >
                 <option value="">All Countries</option>
-                <option v-for="country in filterOptions.countries" :key="country" :value="country">
+                <option v-for="country in binDataStore.filterOptions.countries" :key="country" :value="country">
                   {{ country }}
                 </option>
               </select>
@@ -208,20 +208,20 @@
           </div>
 
           <!-- Loading State -->
-          <div v-if="loading" class="flex justify-center items-center py-12">
+          <div v-if="binDataStore.loading" class="flex justify-center items-center py-12">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span class="ml-2 text-sm text-gray-500">Loading...</span>
           </div>
 
           <!-- Error State -->
-          <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-md p-4">
+          <div v-else-if="binDataStore.error" class="bg-red-50 border border-red-200 rounded-md p-4">
             <div class="flex">
               <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div class="ml-3">
                 <h3 class="text-sm font-medium text-red-800">Error loading data</h3>
-                <p class="mt-1 text-sm text-red-700">{{ error }}</p>
+                <p class="mt-1 text-sm text-red-700">{{ binDataStore.error }}</p>
               </div>
             </div>
           </div>
@@ -237,7 +237,7 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>BIN Number</span>
-                      <SortIcon :column="'bin_number'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'bin_number'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                   <th
@@ -246,7 +246,7 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>Bank Name</span>
-                      <SortIcon :column="'bank_name'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'bank_name'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                   <th
@@ -255,7 +255,7 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>Card Brand</span>
-                      <SortIcon :column="'card_brand'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'card_brand'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                   <th
@@ -264,7 +264,7 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>Card Type</span>
-                      <SortIcon :column="'card_type'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'card_type'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                   <th
@@ -273,7 +273,7 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>Country</span>
-                      <SortIcon :column="'country_name'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'country_name'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">Website</th>
@@ -283,13 +283,13 @@
                   >
                     <div class="flex items-center space-x-1">
                       <span>Added</span>
-                      <SortIcon :column="'created_at'" :current-sort="filters.sort" :direction="filters.direction" />
+                      <SortIcon :column="'created_at'" :current-sort="binDataStore.filters.sort" :direction="binDataStore.filters.direction" />
                     </div>
                   </th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="item in binData?.data" :key="item.id" class="hover:bg-gray-50">
+                <tr v-for="item in binDataStore.binData?.data" :key="item.id" class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
                     {{ item.bin_number }}
                   </td>
@@ -329,7 +329,7 @@
                     {{ formatDate(item.created_at) }}
                   </td>
                 </tr>
-                <tr v-if="!binData?.data.length">
+                <tr v-if="!binDataStore.binData?.data.length">
                   <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500">
                     No BIN data found matching your filters
                   </td>
@@ -340,13 +340,13 @@
 
           <!-- Pagination -->
           <PaginationComponent
-            v-if="binData && totalPages > 1"
-            :current-page="currentPage"
-            :total-pages="totalPages"
-            :total-items="binData.total"
-            :per-page="filters.per_page"
-            :from="binData.from"
-            :to="binData.to"
+            v-if="binDataStore.binData && binDataStore.totalPages > 1"
+            :current-page="binDataStore.currentPage"
+            :total-pages="binDataStore.totalPages"
+            :total-items="binDataStore.binData.total"
+            :per-page="binDataStore.filters.per_page"
+            :from="binDataStore.binData.from"
+            :to="binDataStore.binData.to"
             @page-change="handlePageChange"
           />
         </div>
@@ -367,18 +367,7 @@ const binDataStore = useBinDataStore()
 const localFilters = ref({ ...binDataStore.filters })
 let debounceTimeout: NodeJS.Timeout | null = null
 
-// Computed properties
-const { 
-  binData, 
-  filterOptions, 
-  stats, 
-  loading, 
-  error, 
-  filters, 
-  hasData, 
-  totalPages, 
-  currentPage 
-} = binDataStore
+// Use reactive store properties directly (don't destructure to maintain reactivity)
 
 onMounted(async () => {
   await Promise.all([
