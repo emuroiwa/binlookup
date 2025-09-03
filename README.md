@@ -120,12 +120,19 @@ binlookup/
    ```bash
    # Build all containers and start services
    docker-compose up --build -d
+   ```
 
-   # Wait for services to start, then run migrations
+3. **Install Dependencies and Setup Database** (Optional - dependencies should be installed during build):
+
+   ```bash
+   # Install Composer dependencies (if needed)
+   docker-compose exec laravel-api composer install
+
+   # Run database migrations
    docker-compose exec laravel-api php artisan migrate
    ```
 
-3. **Verify Installation**:
+4. **Verify Installation**:
 
    ```bash
    # Check all services are running
