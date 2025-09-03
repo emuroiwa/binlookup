@@ -22,6 +22,7 @@ services:
     volumes:
       - ./be:/var/www
       - laravel_storage:/var/www/storage
+      - laravel_vendor:/var/www/vendor
     depends_on:
       - mysql
       - redis
@@ -113,6 +114,7 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - ./be:/var/www
+      - laravel_vendor:/var/www/vendor
     depends_on:
       - mysql
       - redis
@@ -124,6 +126,7 @@ volumes:
   mysql_data:
   redis_data:
   laravel_storage:
+  laravel_vendor:
   node_modules:
 
 networks:
