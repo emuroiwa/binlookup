@@ -58,6 +58,26 @@ A comprehensive Bank Identification Number (BIN) lookup system with Laravel API 
 
 ## Quick Start
 
+### Directory Structure
+
+The project has the following structure:
+```
+binlookup/
+├── docker-compose.yml          # Main Docker Compose configuration
+├── be/                        # Laravel Backend (PHP 8.2, Laravel 11)
+│   ├── app/                   # Laravel application code
+│   ├── database/              # Migrations, factories, seeders
+│   ├── tests/                 # Pest test suite (80 tests)
+│   └── ...
+├── fe/                        # Vue.js Frontend (Vue 3, TypeScript, Tailwind)
+│   ├── src/                   # Vue application code
+│   ├── package.json           # Frontend dependencies
+│   └── ...
+└── docker/                    # Docker configuration files
+    └── mysql/
+        └── my.cnf
+```
+
 ### Prerequisites
 
 - Docker 20.10+ and Docker Compose 2.0+
@@ -70,9 +90,9 @@ A comprehensive Bank Identification Number (BIN) lookup system with Laravel API 
 1. **Clone and Setup**:
 
    ```bash
-   git clone <repository-url>
-   cd vb02
-   make build
+   git clone https://github.com/emuroiwa/binlookup.git
+   cd binlookup
+   docker-compose up --build -d
    ```
 
 2. **Access Applications**:
@@ -88,23 +108,21 @@ A comprehensive Bank Identification Number (BIN) lookup system with Laravel API 
 
    ```bash
    # Clone repository
-   git clone <repository-url>
-   cd vb02
+   git clone https://github.com/emuroiwa/binlookup.git
+   cd binlookup
 
-   # Copy environment configuration
-   cp .env.docker bin-lookup-system/.env
+   # Environment configuration is already set up in Docker Compose
+   # No additional .env file copying needed
    ```
 
 2. **Build and Start Services**:
 
    ```bash
    # Build all containers and start services
-   make build
+   docker-compose up --build -d
 
-   # This executes:
-   # - docker-compose up --build -d
-   # - Database migrations
-   # - Service health checks
+   # Wait for services to start, then run migrations
+   docker-compose exec laravel-api php artisan migrate
    ```
 
 3. **Verify Installation**:
@@ -124,21 +142,21 @@ A comprehensive Bank Identification Number (BIN) lookup system with Laravel API 
 
 ```bash
 # Main Operations
-make build      # Build and start all services
-make up         # Start existing services
-make down       # Stop all services
-make restart    # Restart all services
-make logs       # View logs from all services
+docker-compose up --build -d    # Build and start all services
+docker-compose up -d            # Start existing services
+docker-compose down             # Stop all services
+docker-compose restart          # Restart all services
+docker-compose logs -f          # View logs from all services
 
 # Development
-make shell      # Access Laravel container shell
-make migrate    # Run database migrations
-make fresh      # Fresh database (drops all tables)
-make test       # Run Laravel test suite
+docker-compose exec laravel-api bash    # Access Laravel container shell
+docker-compose exec laravel-api php artisan migrate    # Run database migrations
+docker-compose exec laravel-api php artisan migrate:fresh --seed    # Fresh database
+docker-compose exec -T laravel-api ./vendor/bin/pest    # Run test suite
 
 # Maintenance
-make clean      # Remove containers and volumes
-make restart    # Restart all services
+docker-compose down -v          # Remove containers and volumes
+docker-compose restart          # Restart all services
 
 # Queue Management
 docker-compose exec laravel-api php artisan queue:work redis --queue=bin-lookups
@@ -146,9 +164,9 @@ docker-compose exec laravel-api php artisan queue:work redis --queue=bin-lookups
 
 ## Environment Configuration
 
-### Sample .env Configuration
+### Environment Configuration
 
-The system uses `.env.docker` which is automatically copied to the Laravel container:
+The system uses environment variables defined in `docker-compose.yml`. The Laravel backend configuration is handled automatically by Docker Compose:
 
 ```bash
 # Application Configuration
@@ -466,7 +484,7 @@ php artisan queue:work redis --queue=bin-lookups --sleep=3 --tries=3 --timeout=1
 
    ```bash
    # Laravel container shell
-   make shell
+   docker-compose exec laravel-api bash
 
    # View logs
    docker-compose logs -f laravel-api
@@ -478,12 +496,12 @@ php artisan queue:work redis --queue=bin-lookups --sleep=3 --tries=3 --timeout=1
 
    ```bash
    # Run migrations
-   make migrate
+   docker-compose exec laravel-api php artisan migrate
 
-   # Fresh database
-   make fresh
+   # Fresh database with seeders
+   docker-compose exec laravel-api php artisan migrate:fresh --seed
 
-   # Access database
+   # Access database via phpMyAdmin
    # URL: http://localhost:8080
    # User: root
    # Password: root_password
@@ -501,7 +519,7 @@ php artisan queue:work redis --queue=bin-lookups --sleep=3 --tries=3 --timeout=1
 
 ### Code Structure
 
-**Laravel Backend** (`bin-lookup-system/`)
+**Laravel Backend** (`be/`)
 
 ```
 app/
@@ -578,11 +596,11 @@ src/
 lsof -i :8000 -i :5173 -i :3306 -i :6379 -i :8080
 
 # Clean and rebuild
-make clean
-make build
+docker-compose down -v
+docker-compose up --build -d
 
 # Check logs
-make logs
+docker-compose logs -f
 ```
 
 **Database Connection Issues**
@@ -595,7 +613,7 @@ docker-compose ps mysql
 docker-compose exec mysql mysql -u bin_user -p bin_lookup_system
 
 # Reset database
-make fresh
+docker-compose exec laravel-api php artisan migrate:fresh --seed
 ```
 
 **Queue Jobs Not Processing**

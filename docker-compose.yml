@@ -4,7 +4,7 @@ services:
   # Laravel API Backend
   laravel-api:
     build:
-      context: ./bin-lookup-system
+      context: ./be
       dockerfile: Dockerfile
     container_name: bin-lookup-api
     ports:
@@ -20,7 +20,7 @@ services:
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
     volumes:
-      - ./bin-lookup-system:/var/www
+      - ./be:/var/www
       - laravel_storage:/var/www/storage
     depends_on:
       - mysql
@@ -98,7 +98,7 @@ services:
   # Queue Worker
   queue-worker:
     build:
-      context: ./bin-lookup-system
+      context: ./be
       dockerfile: Dockerfile
     container_name: bin-lookup-queue
     command: sh -c "sleep 15 && php artisan queue:work redis --queue=bin-lookups --sleep=3 --tries=3 --daemon"
@@ -112,7 +112,7 @@ services:
       - REDIS_PASSWORD=redis_password
       - QUEUE_CONNECTION=redis
     volumes:
-      - ./bin-lookup-system:/var/www
+      - ./be:/var/www
     depends_on:
       - mysql
       - redis
